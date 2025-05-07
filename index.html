@@ -1,0 +1,203 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Messaging Test Client</title>
+    <style>
+      body {
+        font-family: Arial;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      #messages {
+        border: 1px solid #ddd;
+        padding: 10px;
+        height: 400px;
+        overflow-y: scroll;
+        margin-bottom: 20px;
+      }
+      .message {
+        margin-bottom: 15px;
+        padding: 10px;
+        background: #f5f5f5;
+        border-radius: 5px;
+      }
+      .comment {
+        margin-left: 20px;
+        margin-top: 5px;
+        padding: 5px;
+        background: #e9e9e9;
+        border-radius: 3px;
+        font-size: 0.9em;
+      }
+      .reactions {
+        margin-top: 5px;
+      }
+      .reaction {
+        display: inline-block;
+        margin-right: 5px;
+        padding: 2px 5px;
+        background: #fff;
+        border-radius: 3px;
+        font-size: 0.8em;
+      }
+      input,
+      textarea,
+      button {
+        margin-bottom: 10px;
+        width: 100%;
+        padding: 8px;
+      }
+      button {
+        background: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #45a049;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Messaging Test Client</h1>
+
+    <div id="messages"></div>
+
+    <h3>Send Message</h3>
+    <input type="text" id="author" placeholder="Your name" />
+    <textarea id="messageContent" placeholder="Your message"></textarea>
+    <button id="sendMessage">Send Message</button>
+
+    <h3>React to Message</h3>
+    <input type="number" id="messageId" placeholder="Message ID" />
+    <input
+      type="text"
+      id="reactionType"
+      placeholder="Reaction (like, love, etc)"
+    />
+    <button id="sendReaction">Send Reaction</button>
+
+    <h3>Comment on Message</h3>
+    <input type="number" id="commentMessageId" placeholder="Message ID" />
+    <textarea id="commentContent" placeholder="Your comment"></textarea>
+    <button id="sendComment">Send Comment</button>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+      const socket = io('http://localhost:3000');
+      const messagesDiv = document.getElementById('messages');
+
+      // Load all messages when connected
+      socket.on('connect', () => {
+        socket.emit('requestAllMessages');
+      });
+
+      // Display all messages
+      socket.on('allMessages', (messages) => {
+        messagesDiv.innerHTML = '';
+        messages.forEach((msg) => displayMessage(msg));
+      });
+
+      // Handle new message
+      socket.on('newMessage', (message) => {
+        displayMessage(message);
+      });
+
+      // Handle new comment
+      socket.on('newComment', (comment) => {
+        const messageDiv = document.querySelector(
+          `.message[data-id="${comment.message.id}"]`,
+        );
+        if (messageDiv) {
+          const commentsDiv =
+            messageDiv.querySelector('.comments') ||
+            document.createElement('div');
+          commentsDiv.className = 'comments';
+          commentsDiv.innerHTML += `<div class="comment"><strong>${comment.author}:</strong> ${comment.content}</div>`;
+          messageDiv.appendChild(commentsDiv);
+        }
+      });
+
+      // Handle new reaction
+      socket.on('newReaction', (reaction) => {
+        const messageDiv = document.querySelector(
+          `.message[data-id="${reaction.message.id}"]`,
+        );
+        if (messageDiv) {
+          const reactionsDiv =
+            messageDiv.querySelector('.reactions') ||
+            document.createElement('div');
+          reactionsDiv.className = 'reactions';
+          reactionsDiv.innerHTML += `<span class="reaction" title="${reaction.author}">${reaction.type}</span>`;
+          messageDiv.appendChild(reactionsDiv);
+        }
+      });
+
+      // Send message
+      document.getElementById('sendMessage').addEventListener('click', () => {
+        const author = document.getElementById('author').value;
+        const content = document.getElementById('messageContent').value;
+        if (author && content) {
+          socket.emit('sendMessage', { author, content });
+          document.getElementById('messageContent').value = '';
+        }
+      });
+
+      // Send reaction
+      document.getElementById('sendReaction').addEventListener('click', () => {
+        const author = document.getElementById('author').value;
+        const type = document.getElementById('reactionType').value;
+        const messageId = document.getElementById('messageId').value;
+        if (author && type && messageId) {
+          socket.emit('sendReaction', {
+            author,
+            type,
+            messageId: parseInt(messageId),
+          });
+          document.getElementById('reactionType').value = '';
+        }
+      });
+
+      // Send comment
+      document.getElementById('sendComment').addEventListener('click', () => {
+        const author = document.getElementById('author').value;
+        const content = document.getElementById('commentContent').value;
+        const messageId = document.getElementById('commentMessageId').value;
+        if (author && content && messageId) {
+          socket.emit('sendComment', {
+            author,
+            content,
+            messageId: parseInt(messageId),
+          });
+          document.getElementById('commentContent').value = '';
+        }
+      });
+
+      // Display message function
+      function displayMessage(message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message';
+        messageDiv.dataset.id = message.id;
+
+        let reactionsHtml = message.reactions?.length
+          ? `<div class="reactions">${message.reactions.map((r) => `<span class="reaction" title="${r.author}">${r.type}</span>`).join('')}</div>`
+          : '';
+
+        let commentsHtml = message.comments?.length
+          ? `<div class="comments">${message.comments.map((c) => `<div class="comment"><strong>${c.author}:</strong> ${c.content}</div>`).join('')}</div>`
+          : '';
+
+        messageDiv.innerHTML = `
+        <strong>${message.author}</strong> - ${new Date(message.createdAt).toLocaleString()}
+        <p>${message.content}</p>
+        ${reactionsHtml}
+        ${commentsHtml}
+      `;
+
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+    </script>
+  </body>
+</html>
