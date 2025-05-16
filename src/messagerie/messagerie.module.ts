@@ -4,8 +4,8 @@ import { MessagesService } from './messagerie.service';
 import { MessagesGateway } from './messagerie.gateway';
 import { MessagesController } from './messagerie.controller';
 import { Message } from './entities/message.entity';
-import { Reaction } from './entities/reaction.entity';
-import { Comment } from './entities/comment.entity';
+import { Reaction } from '../reaction/entities/reaction.entity';
+import { Comment } from '../comment/entities/comment.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Message, Reaction, Comment])],

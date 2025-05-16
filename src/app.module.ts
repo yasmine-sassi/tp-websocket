@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MessagesModule } from './messagerie/messagerie.module';
+import { CommentModule } from './comment/comment.module';
+import { MessageModule } from './message/message.module';
+import { ReactionModule } from './reaction/reaction.module';
 
 @Module({
   imports: [
@@ -15,6 +18,9 @@ import { MessagesModule } from './messagerie/messagerie.module';
       synchronize: true,
     }),
     MessagesModule,
+    CommentModule,
+    MessageModule,
+    ReactionModule,
   ],
 })
 export class AppModule {}

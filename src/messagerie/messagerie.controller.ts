@@ -4,8 +4,8 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CreateReactionDto } from './dto/create-reaction.dto';
 import { Message } from './entities/message.entity';
-import { Comment } from './entities/comment.entity';
-import { Reaction } from './entities/reaction.entity';
+import { Comment } from '../comment/entities/comment.entity';
+import { Reaction } from '../reaction/entities/reaction.entity';
 
 @Controller('messages')
 export class MessagesController {

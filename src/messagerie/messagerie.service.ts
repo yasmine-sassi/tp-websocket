@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Message } from './entities/message.entity';
-import { Reaction } from './entities/reaction.entity';
-import { Comment } from './entities/comment.entity';
+import { Reaction } from '../reaction/entities/reaction.entity';
+import { Comment } from '../comment/entities/comment.entity';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CreateReactionDto } from './dto/create-reaction.dto';
@@ -18,6 +18,8 @@ export class MessagesService {
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
   ) {}
+
+  // find message id
 
   async createMessage(createMessageDto: CreateMessageDto): Promise<Message> {
     const message = this.messageRepository.create(createMessageDto);
